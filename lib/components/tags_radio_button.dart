@@ -32,7 +32,7 @@ class TagsRadioButton extends StatelessWidget {
                   tags[index],
                   color: initialTag.tagName == tags[index].tagName
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.grey,
+                      : Theme.of(context).colorScheme.surface,
                 ),
               ),
               initialTag.tagName != tags[index].tagName

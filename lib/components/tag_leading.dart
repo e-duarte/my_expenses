@@ -10,9 +10,9 @@ class TagLeading extends StatelessWidget {
   Widget build(BuildContext context) {
     return CircleAvatar(
       backgroundColor: color,
-      radius: 26,
+      radius: 30,
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(12.0),
         child: Image.asset(
           tag.iconPath,
           fit: BoxFit.contain,

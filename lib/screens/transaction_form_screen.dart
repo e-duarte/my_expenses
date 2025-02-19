@@ -232,6 +232,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 focusNode: _focusNode5,
                 controller: _obsController,
                 textCapitalization: TextCapitalization.sentences,
+                maxLines: null,
                 decoration: const InputDecoration(
                   labelText: 'Observações',
                 ),
@@ -267,6 +268,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     ),
                   )
                 ],
+              ),
+              SizedBox(
+                height: 20,
               ),
             ],
           ),

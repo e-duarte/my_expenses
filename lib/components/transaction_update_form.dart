@@ -209,6 +209,7 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
         ),
         if (_owner == Owner.other)
           CustomTextField(
+            focusNode: _focusNode4,
             controller: _otherController,
             initValue: widget.transaction.ownerDesc,
             labelText: 'Outro',
