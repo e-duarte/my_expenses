@@ -86,8 +86,8 @@ class TransactionListItem extends StatelessWidget {
                 Text(_installmentLegend),
               ],
             ),
-            if (transaction.payment == Payment.pixCredit)
-              Text(transaction.pixDest)
+            if (transaction.paymentType == Payment.pixCredit)
+              Text(transaction.paymentDest)
           ],
         ),
         trailing: Column(

@@ -6,16 +6,19 @@ class TransactionService {
   static const _table = 'transactions';
 
   Future<Transaction> insertTransaction(Transaction transaction) async {
-    final transactionId = await DbUtils.insertData(_table, transaction.toMap());
+    final mapTrasaction = transaction.toMap();
+    mapTrasaction['tag'] = transaction.tag.id;
+    final transactionId = await DbUtils.insertData(_table, mapTrasaction);
     return transaction.copyWith(id: transactionId);
   }
 
   Future<List<Transaction>> getTransactions() async {
     final transactionsMaps = await DbUtils.listData(_table);
+
     final List<Transaction> transactions = [];
 
     for (var tr in transactionsMaps) {
-      final tag = await TagService().getTag(tr['tag'] as int);
+      final tag = await TagService().getTag(tr['tag']! as int);
       final Map<String, Object?> newMap = Map.from(tr);
       newMap['tag'] = tag.toMap();
       transactions.add(Transaction.fromMap(newMap));

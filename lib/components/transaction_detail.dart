@@ -71,9 +71,9 @@ class TransactionDetail extends StatelessWidget {
             )
           ],
         ),
-        if (transaction.pixDest.isNotEmpty)
+        if (transaction.paymentDest.isNotEmpty)
           Text(
-            'Enviado para ${transaction.pixDest}',
+            'Enviado para ${transaction.paymentDest}',
             maxLines: 3,
             textAlign: TextAlign.center,
           ),

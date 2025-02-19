@@ -22,14 +22,19 @@ class TransactionUpdateForm extends StatefulWidget {
 class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
   TextEditingController? _titleController;
   TextEditingController? _valueController;
+  TextEditingController? _paymentTypeDestController;
   TextEditingController? _otherController;
-  TextEditingController? _pixDestController;
+  TextEditingController? _partialValueController;
+  TextEditingController? _obsController;
 
   final FocusNode _focusNode1 = FocusNode();
   final FocusNode _focusNode2 = FocusNode();
   final FocusNode _focusNode3 = FocusNode();
+  final FocusNode _focusNode4 = FocusNode();
+  final FocusNode _focusNode5 = FocusNode();
 
-  Payment? _payment;
+  Payment? _paymentType;
+  TransactionStatus? _status;
   bool? _fixed = false;
   int? _selectedInstallments = 1;
   DateTime? _selectedDate = DateTime.now();
@@ -59,12 +64,19 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
     _otherController = TextEditingController(
       text: widget.transaction.ownerDesc,
     );
-    _pixDestController = TextEditingController(
-      text: widget.transaction.pixDest,
+    _paymentTypeDestController = TextEditingController(
+      text: widget.transaction.paymentDest,
+    );
+    _partialValueController = TextEditingController(
+      text: widget.transaction.partialValue.toString(),
+    );
+    _obsController = TextEditingController(
+      text: widget.transaction.obs,
     );
 
     _selectedTag = widget.transaction.tag;
-    _payment = widget.transaction.payment;
+    _paymentType = widget.transaction.paymentType;
+    _status = widget.transaction.status;
     _fixed = widget.transaction.fixed;
     _selectedInstallments = widget.transaction.installments;
     _selectedDate = widget.transaction.date;
@@ -75,7 +87,9 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
   void _submitForm() {
     final title = _titleController!.text;
     final value = double.tryParse(_valueController!.text) ?? 0.0;
-    final pixDest = _pixDestController!.text;
+    final paymentDest = _paymentTypeDestController!.text;
+    final partialValue = double.tryParse(_partialValueController!.text) ?? 0.0;
+    final obs = _obsController!.text;
 
     _ownerDesc = switch (_owner) {
       Owner.me => _owner!.name,
@@ -93,16 +107,19 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
     widget.onSubmit(
       Transaction(
         id: widget.transaction.id,
+        tag: _selectedTag!,
         title: title,
         value: value,
-        date: _selectedDate!,
-        fixed: _fixed!,
-        tag: _selectedTag!,
+        paymentDest: paymentDest,
+        paymentType: _paymentType!,
         installments: _selectedInstallments!,
+        date: _selectedDate!,
         owner: _owner!,
         ownerDesc: _ownerDesc!,
-        payment: _payment!,
-        pixDest: pixDest,
+        status: _status!,
+        partialValue: partialValue,
+        obs: obs,
+        fixed: _fixed!,
       ),
     );
 
@@ -143,22 +160,22 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
             {'title': 'Pix-Crédito', 'value': Payment.pixCredit},
             {'title': 'Crédito', 'value': Payment.credit},
           ],
-          groupValue: _payment!,
+          groupValue: _paymentType!,
           onChanged: (value) {
             setState(() {
-              _payment = value as Payment;
+              _paymentType = value as Payment;
             });
           },
         ),
-        if (_payment == Payment.pix || _payment == Payment.pixCredit)
+        if (_paymentType == Payment.pix || _paymentType == Payment.pixCredit)
           CustomTextField(
             focusNode: _focusNode3,
-            controller: _pixDestController,
+            controller: _paymentTypeDestController,
             initValue: widget.transaction.ownerDesc,
             labelText: 'Enviado para',
             onSubmitted: (_) => _submitForm(),
           ),
-        if (_payment == Payment.credit)
+        if (_paymentType == Payment.credit)
           InstallmetsDropdown(
             transactionValue: double.tryParse(_valueController!.text) ?? 0.0,
             numberOfInstallments: _numberOfInstallments,

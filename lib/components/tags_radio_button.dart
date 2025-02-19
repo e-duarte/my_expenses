@@ -30,15 +30,15 @@ class TagsRadioButton extends StatelessWidget {
                 onTap: () => onChanged(tags[index]),
                 child: TagLeading(
                   tags[index],
-                  color: initialTag.tag == tags[index].tag
+                  color: initialTag.tagName == tags[index].tagName
                       ? Theme.of(context).colorScheme.primary
-                      : tags[index].color,
+                      : Colors.grey,
                 ),
               ),
-              initialTag.tag != tags[index].tag
-                  ? Text(tags[index].tag)
+              initialTag.tagName != tags[index].tagName
+                  ? Text(tags[index].tagName)
                   : Text(
-                      tags[index].tag,
+                      tags[index].tagName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),

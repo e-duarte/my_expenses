@@ -19,15 +19,20 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   final _titleController = TextEditingController();
   final _valueController = TextEditingController();
   final _otherController = TextEditingController();
-  final _pixDestController = TextEditingController();
+  final _paymentTypeDestController = TextEditingController();
+  final _partialValueController = TextEditingController();
+  final _obsController = TextEditingController();
 
   final FocusNode _focusNode1 = FocusNode();
   final FocusNode _focusNode2 = FocusNode();
   final FocusNode _focusNode3 = FocusNode();
+  final FocusNode _focusNode4 = FocusNode();
+  final FocusNode _focusNode5 = FocusNode();
 
   final _numberOfInstallments = 12;
 
-  Payment _payment = Payment.pix;
+  Payment _paymentType = Payment.pixCredit;
+  TransactionStatus _status = TransactionStatus.paid;
   bool _fixed = false;
   int _selectedInstallments = 1;
   DateTime _selectedDate = DateTime.now();
@@ -92,10 +97,19 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
               Row(
                 children: [
                   Text(
-                    'Nova Transação',
+                    'Nova Conta',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
+              ),
+              TagsRadioButton(
+                tags: _tags,
+                initialTag: _selectedTag!,
+                onChanged: (tag) {
+                  setState(() {
+                    _selectedTag = tag;
+                  });
+                },
               ),
               TextField(
                 focusNode: _focusNode1,
@@ -122,30 +136,33 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                   FocusScope.of(context).requestFocus(_focusNode3);
                 },
               ),
+              TextField(
+                focusNode: _focusNode3,
+                controller: _paymentTypeDestController,
+                decoration: const InputDecoration(
+                  labelText: 'Enviado para',
+                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                onSubmitted: (_) {
+                  _focusNode1.unfocus();
+                  FocusScope.of(context).requestFocus(_focusNode3);
+                },
+              ),
               RadioList(
                 data: const [
                   {'title': 'Pix', 'value': Payment.pix},
                   {'title': 'PixCredit', 'value': Payment.pixCredit},
                   {'title': 'Credit', 'value': Payment.credit},
                 ],
-                groupValue: _payment,
+                groupValue: _paymentType,
                 onChanged: (value) {
                   setState(() {
-                    _payment = value as Payment;
+                    _paymentType = value as Payment;
                   });
                 },
               ),
-              if (_payment == Payment.pix || _payment == Payment.pixCredit)
-                TextField(
-                  focusNode: _focusNode3,
-                  controller: _pixDestController,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Enviado para',
-                  ),
-                  onSubmitted: (_) => _submitForm(),
-                ),
-              if (_payment == Payment.credit)
+              if (_paymentType == Payment.credit)
                 InstallmetsDropdown(
                   transactionValue:
                       double.tryParse(_valueController.text) ?? 0.0,
@@ -187,21 +204,45 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                   ),
                   onSubmitted: (_) => _submitForm(),
                 ),
+              RadioList(
+                data: const [
+                  {'title': 'Pago', 'value': TransactionStatus.paid},
+                  {'title': 'A pagar', 'value': TransactionStatus.unpaid},
+                  {'title': 'Parcial', 'value': TransactionStatus.partial},
+                ],
+                groupValue: _status,
+                onChanged: (value) {
+                  setState(() {
+                    _status = value as TransactionStatus;
+                  });
+                },
+              ),
+              if (_status == TransactionStatus.partial)
+                TextField(
+                  focusNode: _focusNode4,
+                  controller: _partialValueController,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor Parcial (R\$)',
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onSubmitted: (_) => _submitForm(),
+                ),
+              TextField(
+                focusNode: _focusNode5,
+                controller: _obsController,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Observações',
+                ),
+                onSubmitted: (_) => _submitForm(),
+              ),
               LabelSwtich(
                 label: 'Fixar Compra para os meses seguintes?',
                 value: _fixed,
                 onChanged: (value) {
                   setState(() {
                     _fixed = value;
-                  });
-                },
-              ),
-              TagsRadioButton(
-                tags: _tags,
-                initialTag: _selectedTag!,
-                onChanged: (tag) {
-                  setState(() {
-                    _selectedTag = tag;
                   });
                 },
               ),
@@ -237,7 +278,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   void _submitForm() {
     final title = _titleController.text;
     final value = double.tryParse(_valueController.text) ?? 0.0;
-    final pixDest = _pixDestController.text;
+    final partialValue = double.tryParse(_partialValueController.text) ?? 0.0;
+    final paymentDest = _paymentTypeDestController.text;
+    final obs = _obsController.text;
 
     _ownerDesc = switch (_owner) {
       Owner.me => _owner.name,
@@ -253,16 +296,19 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
 
     _onSubmit!(
       Transaction(
+        tag: _selectedTag!,
         title: title,
         value: value,
-        date: _selectedDate,
-        fixed: _fixed,
-        tag: _selectedTag!,
+        paymentDest: paymentDest,
+        paymentType: _paymentType,
         installments: _selectedInstallments,
+        date: _selectedDate,
         owner: _owner,
         ownerDesc: _ownerDesc,
-        payment: _payment,
-        pixDest: pixDest,
+        status: _status,
+        partialValue: partialValue,
+        obs: obs,
+        fixed: _fixed,
       ),
     );
 

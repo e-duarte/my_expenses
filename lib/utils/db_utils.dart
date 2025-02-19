@@ -10,6 +10,7 @@ class DbUtils {
         id INTEGER PRIMARY KEY,
         title TEXT NOT NULL,
         value REAL NOT NULL,
+        paymentDest TEXT NOT NULL,
         date TEXT NOT NULL,
         fixed INTEGER NOT NULL,
         tag INTEGER NOT NULL,
@@ -17,7 +18,9 @@ class DbUtils {
         owner INTEGER NOT NULL,
         ownerDesc TEXT NOT NULL,
         payment INTEGER NOT NULL,
-        pixDest TEXT NOT NULL,
+        status INTEGER NOT NULL,
+        partialValue REAL NOT NULL,
+        obs TEXT NOT NULL,
         FOREIGN KEY (tag)
           REFERENCES tags (id)
             ON DELETE CASCADE 
@@ -25,9 +28,8 @@ class DbUtils {
       )''';
   static const _tagTable = '''CREATE TABLE tags(
         id INTEGER PRIMARY KEY,
-        tag TEXT NOT NULL,
-        iconPath TEXT NOT NULL,
-        color TEXT NOT NULL
+        tagName TEXT NOT NULL,
+        iconPath TEXT NOT NULL
       )''';
 
   static const _settingTable = '''CREATE TABLE settings(
@@ -64,7 +66,9 @@ class DbUtils {
   static Future<List<Map<String, Object?>>> listData(String table) async {
     final db = await DbUtils.database();
 
-    return await db.query(table);
+    final resul = await db.query(table);
+
+    return resul;
   }
 
   static Future<Map<String, Object?>> fetchById(String table, int id) async {

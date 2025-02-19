@@ -37,7 +37,7 @@ class PaymentFilter extends Filter<Payment> {
 
   @override
   List<Transaction> filter(List<Transaction> trs) {
-    return trs.where((tr) => tr.payment == value).toList();
+    return trs.where((tr) => tr.paymentType == value).toList();
   }
 }
 
@@ -55,7 +55,7 @@ class TagFilter extends Filter<String> {
 
   @override
   List<Transaction> filter(List<Transaction> trs) {
-    return trs.where((tr) => tr.tag.tag == value).toList();
+    return trs.where((tr) => tr.tag.tagName == value).toList();
   }
 }
 

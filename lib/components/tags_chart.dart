@@ -52,14 +52,14 @@ class TagsChart extends StatelessWidget {
                   ),
                 ),
                 barGroups: List.generate(_groupedValues.length, (index) {
-                  final tagColor = tags[index].color;
+                  final barColor = Theme.of(context).colorScheme.outline;
 
                   return BarChartGroupData(
                     x: index,
                     barRods: [
                       BarChartRodData(
                         toY: _groupedValues[index]['value'] as double,
-                        color: tagColor,
+                        color: barColor,
                       )
                     ],
                   );
@@ -124,14 +124,14 @@ class TagsChart extends StatelessWidget {
     return tags.map((tag) {
       var totalSum = 0.0;
       for (var tr in transactions) {
-        if (tr.tag.tag == tag.tag) {
+        if (tr.tag.tagName == tag.tagName) {
           totalSum += (tr.owner == Owner.divided)
               ? tr.value / 2
               : tr.value / tr.installments;
         }
       }
 
-      return {'tag': tag.tag, 'value': totalSum};
+      return {'tag': tag.tagName, 'value': totalSum};
     }).toList();
   }
 

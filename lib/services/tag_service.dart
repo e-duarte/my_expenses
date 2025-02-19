@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:my_expenses/models/tag.dart';
 import 'package:my_expenses/utils/db_utils.dart';
 
@@ -20,49 +19,40 @@ class TagService {
 
     tags = [
       Tag(
-        tag: 'Ninos',
-        iconPath: 'assets/icons/cats_icon.png',
-        color: Color(int.parse('0xFFF4DBB4')),
-      ),
-      Tag(
-        tag: 'Compras',
-        iconPath: 'assets/icons/compras_icon.png',
-        color: Color(int.parse('0xFFB4C4ED')),
-      ),
-      Tag(
-        tag: 'Mercado',
-        iconPath: 'assets/icons/mercado_icon.png',
-        color: Color(int.parse('0xFFB4EDBD')),
-      ),
-      Tag(
-        tag: 'Merenda',
+        tagName: 'Merenda',
         iconPath: 'assets/icons/merenda_icon.png',
-        color: Color(int.parse('0xFFE8B4ED')),
       ),
       Tag(
-        tag: 'Refeição',
+        tagName: 'Refeição',
         iconPath: 'assets/icons/meal_icon.png',
-        color: Color(int.parse('0xFFF6989FA')),
       ),
       Tag(
-        tag: 'Despesas',
+        tagName: 'Compras',
+        iconPath: 'assets/icons/compras_icon.png',
+      ),
+      Tag(
+        tagName: 'Mercado',
+        iconPath: 'assets/icons/mercado_icon.png',
+      ),
+      Tag(
+        tagName: 'Ninos',
+        iconPath: 'assets/icons/cats_icon.png',
+      ),
+      Tag(
+        tagName: 'Despesas',
         iconPath: 'assets/icons/home_icon.png',
-        color: Color(int.parse('0xFFF7FF9A')),
       ),
       Tag(
-        tag: 'Reserva',
+        tagName: 'Reserva',
         iconPath: 'assets/icons/reserva_icon.png',
-        color: Color(int.parse('0xFF69FAE8')),
       ),
       Tag(
-        tag: 'Geral',
+        tagName: 'Geral',
         iconPath: 'assets/icons/general_icon.png',
-        color: Color(int.parse('0xFFD7D7D7')),
       ),
       Tag(
-        tag: 'Terceiros',
+        tagName: 'Terceiros',
         iconPath: 'assets/icons/users_icon.png',
-        color: Color(int.parse('0xFFD7D7D7')),
       ),
     ];
     List<Tag> tagsWithId = [];

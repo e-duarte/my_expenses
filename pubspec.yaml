@@ -1,6 +1,6 @@
 name: my_expenses
 description: "A financial app for my expenses"
-publish_to: 'none'
+publish_to: 'github'
 
 version: 1.0.0+1
 
