@@ -140,31 +140,43 @@ class _HomeScreenState extends State<HomeScreen> {
     final appBar = PreferredSize(
       preferredSize: Size.fromHeight(appBarHeight),
       child: AppBar(
-        title: MonthsDropDown(
-          month: _selectedMonth!,
-          onChanged: (newMonth) {
-            setState(() {
-              _selectedMonth = newMonth;
-            });
-          },
-        ),
+        title: Text('Minhas Despesas'),
+        // title: MonthsDropDown(
+        //   month: _selectedMonth!,
+        //   onChanged: (newMonth) {
+        //     setState(() {
+        //       _selectedMonth = newMonth;
+        //     });
+        //   },
+        // ),
         actions: [
-          IconButton(
+          ElevatedButton(
             onPressed: () => _openTransactionalForm(context),
-            icon: const Icon(Icons.add),
-            color: Theme.of(context).colorScheme.primary,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.all(0),
+            ),
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 30,
+            ),
           ),
-          IconButton(
-            onPressed: _shareWhatsapp,
-            icon: const Icon(Icons.share),
-          ),
-          IconButton(
-            onPressed: _shareTransactions,
-            icon: const Icon(Icons.open_in_browser),
-          ),
+
+          // IconButton(
+          //   onPressed: _shareWhatsapp,
+          //   icon: const Icon(Icons.share),
+          // ),
+          // IconButton(
+          //   onPressed: _shareTransactions,
+          //   icon: const Icon(Icons.open_in_browser),
+          // ),
           IconButton(
             onPressed: _openSettingsModal,
-            icon: const Icon(Icons.settings),
+            icon: const Icon(
+              Icons.settings,
+              size: 30,
+            ),
           ),
         ],
       ),
