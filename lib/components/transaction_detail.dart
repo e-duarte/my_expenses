@@ -28,24 +28,24 @@ class TransactionDetail extends StatelessWidget {
           maxLines: 3,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        if (transaction.installments == 1 && transaction.isDivided)
+        if (transaction.numOfInstallments == 1 && transaction.isDivided)
           Text(
             'R\$${formatValue(transaction.installmentValue / 2)} (dividido)',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall,
           ),
         Text(
-          '${transaction.date.day} de ${formatMonthToBr(transaction.date)} de ${transaction.date.year}',
+          '${transaction.createAt.day} de ${formatMonthToBr(transaction.createAt)} de ${transaction.createAt.year}',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        if (transaction.installments > 1)
+        if (transaction.numOfInstallments > 1)
           Text(
-            '${transaction.installments} parcelas de R\$${formatValue(transaction.installmentValue)}',
+            '${transaction.numOfInstallments} parcelas de R\$${formatValue(transaction.installmentValue)}',
           ),
-        if (transaction.installments > 1 && transaction.isDivided)
+        if (transaction.numOfInstallments > 1 && transaction.isDivided)
           Text(
-            '${transaction.installments} parcelas de R\$${formatValue(transaction.installmentValue / 2)} (dividido)',
+            '${transaction.numOfInstallments} parcelas de R\$${formatValue(transaction.installmentValue / 2)} (dividido)',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         Row(

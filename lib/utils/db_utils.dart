@@ -11,15 +11,13 @@ class DbUtils {
         title TEXT NOT NULL,
         value REAL NOT NULL,
         paymentDest TEXT NOT NULL,
-        date TEXT NOT NULL,
+        createAt TEXT NOT NULL,
         fixed INTEGER NOT NULL,
         tag INTEGER NOT NULL,
-        installments INTEGER NOT NULL,
+        numOfInstallments INTEGER NOT NULL,
         owner INTEGER NOT NULL,
         ownerDesc TEXT NOT NULL,
         payment INTEGER NOT NULL,
-        status INTEGER NOT NULL,
-        partialValue REAL NOT NULL,
         obs TEXT NOT NULL,
         FOREIGN KEY (tag)
           REFERENCES tags (id)
@@ -30,6 +28,19 @@ class DbUtils {
         id INTEGER PRIMARY KEY,
         tagName TEXT NOT NULL,
         iconPath TEXT NOT NULL
+      )''';
+
+  static const _installmentTable = '''CREATE TABLE installments(
+        id INTEGER PRIMARY KEY,
+        transactionId INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        dueDate TEXT NOT NULL,
+        status INTEGER NOT NULL,
+        paidAmount REAL NOT NULL,
+        FOREIGN KEY (transactionId)
+          REFERENCES transactions (id)
+            ON DELETE CASCADE 
+            ON UPDATE NO ACTION
       )''';
 
   static const _settingTable = '''CREATE TABLE settings(
@@ -44,6 +55,7 @@ class DbUtils {
       join(await sql.getDatabasesPath(), _dbPath),
       onCreate: (db, version) {
         db.execute(_transactionTable);
+        db.execute(_installmentTable);
         db.execute(_tagTable);
         db.execute(_settingTable);
       },

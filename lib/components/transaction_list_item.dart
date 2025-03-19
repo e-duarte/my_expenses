@@ -20,7 +20,7 @@ class TransactionListItem extends StatelessWidget {
   final void Function(Transaction) onUpdate;
 
   double get currentTransactionValue {
-    final value = transaction.value / transaction.installments;
+    final value = transaction.value / transaction.numOfInstallments;
     return transaction.owner == Owner.divided ? value / 2 : value;
   }
 
@@ -33,12 +33,12 @@ class TransactionListItem extends StatelessWidget {
   }
 
   String get _installmentLegend {
-    if (transaction.installments == 1) return '';
+    if (transaction.numOfInstallments == 1) return '';
 
     final currentInstallment =
-        (currentDate.month - transaction.date.month + 1).abs();
+        (currentDate.month - transaction.createAt.month + 1).abs();
 
-    return '$currentInstallment/${transaction.installments}';
+    return '$currentInstallment/${transaction.numOfInstallments}';
   }
 
   @override
@@ -101,7 +101,7 @@ class TransactionListItem extends StatelessWidget {
             ),
             Text(
               DateFormat('dd - MMM', 'pt_BR')
-                  .format(transaction.date)
+                  .format(transaction.createAt)
                   .replaceFirst('01', '1º')
                   .replaceFirst('-', 'de'),
             ),

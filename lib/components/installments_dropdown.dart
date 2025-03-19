@@ -5,19 +5,19 @@ class InstallmetsDropdown extends StatelessWidget {
   const InstallmetsDropdown({
     super.key,
     required this.transactionValue,
-    required this.numberOfInstallments,
+    required this.numOfInstallments,
     required this.initialValue,
     required this.onChanged,
   });
 
   final double transactionValue;
-  final int numberOfInstallments;
+  final int numOfInstallments;
   final int initialValue;
   final void Function(int) onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final installments = List.generate(numberOfInstallments, (i) => i + 1);
+    final installments = List.generate(numOfInstallments, (i) => i + 1);
     return SizedBox(
       width: double.infinity,
       child: DropdownButton<int>(

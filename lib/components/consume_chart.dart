@@ -62,12 +62,12 @@ class ConsumeChart extends StatelessWidget {
         .where((tr) => tr.owner == Owner.me || tr.owner == Owner.divided)
         .fold(0.0, (sum, tr) {
       return tr.owner == Owner.divided
-          ? (sum + ((tr.value / tr.installments) / 2))
-          : sum + (tr.value / tr.installments);
+          ? (sum + ((tr.value / tr.numOfInstallments) / 2))
+          : sum + (tr.value / tr.numOfInstallments);
     });
   }
 
   double get _otherValues => transactions
       .where((tr) => tr.owner == Owner.other)
-      .fold(0, (sum, tr) => sum + tr.value / tr.installments);
+      .fold(0, (sum, tr) => sum + tr.value / tr.numOfInstallments);
 }

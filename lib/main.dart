@@ -31,7 +31,7 @@ class App extends StatelessWidget {
           primary: const Color(0xFF1AD409),
           secondary: Colors.redAccent,
           tertiary: const Color(0xFF4E71FF),
-          surface: const Color(0xFFD9D9D9),
+          surface: Color(0xFFD9D9D9),
         ),
         textTheme: theme.textTheme.copyWith(
           titleLarge: const TextStyle(
@@ -65,7 +65,7 @@ class App extends StatelessWidget {
         appBarTheme: theme.appBarTheme.copyWith(
           backgroundColor: Colors.white,
         ),
-        scaffoldBackgroundColor: const Color(0xFFE9E9E9),
+        scaffoldBackgroundColor: Colors.white,
       ),
       initialRoute: AppRoutes.HOME_SCREEN,
       routes: {

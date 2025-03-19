@@ -4,6 +4,7 @@ import 'package:my_expenses/components/installments_dropdown.dart';
 import 'package:my_expenses/components/label_switch.dart';
 import 'package:my_expenses/components/radio_list.dart';
 import 'package:my_expenses/components/tags_radio_button.dart';
+import 'package:my_expenses/models/installment.dart';
 import 'package:my_expenses/models/tag.dart';
 import 'package:my_expenses/models/transaction.dart';
 import 'package:my_expenses/services/tag_service.dart';
@@ -20,7 +21,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   final _valueController = TextEditingController();
   final _otherController = TextEditingController();
   final _paymentTypeDestController = TextEditingController();
-  final _partialValueController = TextEditingController();
+  final _paidAmountController = TextEditingController();
   final _obsController = TextEditingController();
 
   final FocusNode _focusNode1 = FocusNode();
@@ -32,7 +33,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   final _numberOfInstallments = 12;
 
   Payment _paymentType = Payment.pixCredit;
-  TransactionStatus _status = TransactionStatus.paid;
+  PaymentStatus _status = PaymentStatus.paid;
   bool _fixed = false;
   int _selectedInstallments = 1;
   DateTime _selectedDate = DateTime.now();
@@ -41,6 +42,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   Tag? _selectedTag;
 
   List<Tag> _tags = [];
+
   void Function(Transaction)? _onSubmit;
 
   @override
@@ -166,7 +168,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 InstallmetsDropdown(
                   transactionValue:
                       double.tryParse(_valueController.text) ?? 0.0,
-                  numberOfInstallments: _numberOfInstallments,
+                  numOfInstallments: _numberOfInstallments,
                   initialValue: _selectedInstallments,
                   onChanged: (value) {
                     setState(() {
@@ -206,21 +208,21 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 ),
               RadioList(
                 data: const [
-                  {'title': 'Pago', 'value': TransactionStatus.paid},
-                  {'title': 'A pagar', 'value': TransactionStatus.unpaid},
-                  {'title': 'Parcial', 'value': TransactionStatus.partial},
+                  {'title': 'Pago', 'value': PaymentStatus.paid},
+                  {'title': 'A pagar', 'value': PaymentStatus.unpaid},
+                  {'title': 'Parcial', 'value': PaymentStatus.partial},
                 ],
                 groupValue: _status,
                 onChanged: (value) {
                   setState(() {
-                    _status = value as TransactionStatus;
+                    _status = value as PaymentStatus;
                   });
                 },
               ),
-              if (_status == TransactionStatus.partial)
+              if (_status == PaymentStatus.partial)
                 TextField(
                   focusNode: _focusNode4,
-                  controller: _partialValueController,
+                  controller: _paidAmountController,
                   decoration: const InputDecoration(
                     labelText: 'Valor Parcial (R\$)',
                   ),
@@ -282,8 +284,8 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   void _submitForm() {
     final title = _titleController.text;
     final value = double.tryParse(_valueController.text) ?? 0.0;
-    final partialValue = double.tryParse(_partialValueController.text) ?? 0.0;
     final paymentDest = _paymentTypeDestController.text;
+    final paidAmount = double.tryParse(_paidAmountController.text) ?? 0.0;
     final obs = _obsController.text;
 
     _ownerDesc = switch (_owner) {
@@ -298,6 +300,16 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       return;
     }
 
+    List<Installment> installments =
+        List.generate(_selectedInstallments, (index) {
+      return Installment(
+        amount: value / _selectedInstallments,
+        dueDate: _selectedDate.add(Duration(days: index * 30)),
+        status: _status,
+        paidAmount: paidAmount,
+      );
+    });
+
     _onSubmit!(
       Transaction(
         tag: _selectedTag!,
@@ -305,12 +317,11 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         value: value,
         paymentDest: paymentDest,
         paymentType: _paymentType,
-        installments: _selectedInstallments,
-        date: _selectedDate,
+        numOfInstallments: _selectedInstallments,
+        installments: installments,
+        createAt: _selectedDate,
         owner: _owner,
         ownerDesc: _ownerDesc,
-        status: _status,
-        partialValue: partialValue,
         obs: obs,
         fixed: _fixed,
       ),

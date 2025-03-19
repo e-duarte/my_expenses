@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:my_expenses/components/consume_chart.dart';
 import 'package:my_expenses/components/loading_widget.dart';
 import 'package:my_expenses/components/months_dropdown.dart';
+import 'package:my_expenses/components/months_list.dart';
 import 'package:my_expenses/components/setting_form.dart';
 import 'package:my_expenses/components/tags_chart.dart';
 import 'package:my_expenses/components/filter_pop_menu.dart';
 import 'package:my_expenses/components/transaction_list.dart';
+import 'package:my_expenses/models/installment.dart';
 import 'package:my_expenses/models/settings.dart';
 import 'package:my_expenses/models/tag.dart';
 import 'package:my_expenses/models/transaction.dart';
@@ -60,19 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Transaction> get _transactionByMonth {
     final filtred = _transactions!.where((tr) {
-      return (tr.date.isBefore(_selectedMonth!) ||
-              tr.date.month == _selectedMonth!.month ||
+      return (tr.createAt.isBefore(_selectedMonth!) ||
+              tr.createAt.month == _selectedMonth!.month ||
               tr.fixed) &&
-          tr.date.year == _selectedMonth!.year;
+          tr.createAt.year == _selectedMonth!.year;
     }).where((tr) {
-      final trMonth = tr.date.month;
+      final trMonth = tr.createAt.month;
       final currentMonth = _selectedMonth!.month;
 
-      return ((trMonth + tr.installments) > currentMonth) || tr.fixed;
+      return ((trMonth + tr.numOfInstallments) > currentMonth) || tr.fixed;
     }).toList();
 
     filtred.sort(
-      (a, b) => a.date.compareTo(b.date),
+      (a, b) => a.createAt.compareTo(b.createAt),
     );
     return filtred.reversed.toList();
   }
@@ -87,6 +89,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return filtered.isEmpty ? _transactionByMonth : filtered;
   }
 
+  List<double> get _sumAmountByMonth {
+    return List.generate(12, (i) {
+      final month = DateTime(DateTime.now().year, i + 1);
+      List<Installment> installments = [];
+      for (var tr in _transactions!) {
+        installments.addAll(tr.installments.where((ins) {
+          return ins.dueDate.month == month.month &&
+              ins.dueDate.year == month.year;
+        }).toList());
+      }
+
+      return installments.fold(0.0, (sum, ins) => sum + ins.amount);
+    });
+  }
+
   double get _sumFiltredTransactions {
     return _filtredTransactions
         .where((tr) => tr.owner == Owner.me || tr.owner == Owner.divided)
@@ -94,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return sum +
           (tr.owner == Owner.divided
               ? tr.value / 2
-              : tr.value / tr.installments);
+              : tr.value / tr.numOfInstallments);
     });
   }
 
@@ -118,6 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
     TransactionService().getTransactions().then((trs) {
       setState(() {
         _transactions = trs;
+
+        print(_transactions);
       });
     });
   }
@@ -141,20 +160,17 @@ class _HomeScreenState extends State<HomeScreen> {
       preferredSize: Size.fromHeight(appBarHeight),
       child: AppBar(
         title: Text('Minhas Despesas'),
-        // title: MonthsDropDown(
-        //   month: _selectedMonth!,
-        //   onChanged: (newMonth) {
-        //     setState(() {
-        //       _selectedMonth = newMonth;
-        //     });
-        //   },
-        // ),
         actions: [
           ElevatedButton(
             onPressed: () => _openTransactionalForm(context),
             style: ElevatedButton.styleFrom(
+              elevation: 0,
               backgroundColor: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.all(0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              minimumSize: const Size(50, 33),
             ),
             child: Icon(
               Icons.add,
@@ -162,19 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 30,
             ),
           ),
-
-          // IconButton(
-          //   onPressed: _shareWhatsapp,
-          //   icon: const Icon(Icons.share),
-          // ),
-          // IconButton(
-          //   onPressed: _shareTransactions,
-          //   icon: const Icon(Icons.open_in_browser),
-          // ),
           IconButton(
             onPressed: _openSettingsModal,
             icon: const Icon(
-              Icons.settings,
+              Icons.settings_outlined,
               size: 30,
             ),
           ),
@@ -191,94 +198,119 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            height: availableHeight * 0.36,
+          Container(
             width: mediaQuery.size.width,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final charts = [
-                  ConsumeChart(
-                    value: _settings!.monthValue,
-                    transactions: _transactionByMonth,
-                  ),
-                  Center(
-                    child: TagsChart(
-                      transactions: _transactionByMonth,
-                      tags: _tags,
-                    ),
-                  ),
-                ];
-                return CarouselSlider(
-                  options: CarouselOptions(
-                    height: constraints.maxHeight * 0.94,
-                    enableInfiniteScroll: false,
-                    viewportFraction: 0.95,
-                    enlargeCenterPage: true,
-                  ),
-                  items: charts.map((chart) {
-                    return Container(
-                      width: constraints.maxWidth,
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: chart,
-                    );
-                  }).toList(),
-                );
+            height: availableHeight * 0.07,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: MonthsList(
+              amountedByMonths: _sumAmountByMonth,
+              selectedMonth: _selectedMonth!,
+              onMonthSelected: (month) {
+                setState(() {
+                  _selectedMonth = month;
+                });
               },
             ),
           ),
-          Container(
-            height: availableHeight * 0.64,
-            padding: const EdgeInsets.only(left: 10, top: 10, right: 10),
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-            ),
+          Divider(),
+          SingleChildScrollView(
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Transações',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    if (_activedFilters.isNotEmpty)
-                      Text(
-                        'Soma: R\$${formatValue(_sumFiltredTransactions)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    FilterPopMenu(
-                      data: FiltersMapper(_filters)
-                          .mapFiltersActive(_activedFilters),
-                      onFilterChanged: _filterTransactions,
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: TransactionList(
-                    currentDate: _selectedMonth!,
-                    transactions: _filtredTransactions,
-                    onRemoveTransaction: _removeTransaction,
-                    onUpdateTransaction: _updateTransaction,
-                  ),
-                ),
-                Text(
-                  '${_transactionByMonth.length} transações no mês',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Container(
+                  //color: Colors.blue
+                  height: availableHeight * 0.25,
                 ),
               ],
             ),
-          ),
+          )
+          // SizedBox(
+          //   height: availableHeight * 0.36,
+          //   width: mediaQuery.size.width,
+          //   child: LayoutBuilder(
+          //     builder: (context, constraints) {
+          //       final charts = [
+          //         ConsumeChart(
+          //           value: _settings!.monthValue,
+          //           transactions: _transactionByMonth,
+          //         ),
+          //         Center(
+          //           child: TagsChart(
+          //             transactions: _transactionByMonth,
+          //             tags: _tags,
+          //           ),
+          //         ),
+          //       ];
+          //       return CarouselSlider(
+          //         options: CarouselOptions(
+          //           height: constraints.maxHeight * 0.94,
+          //           enableInfiniteScroll: false,
+          //           viewportFraction: 0.95,
+          //           enlargeCenterPage: true,
+          //         ),
+          //         items: charts.map((chart) {
+          //           return Container(
+          //             width: constraints.maxWidth,
+          //             padding: const EdgeInsets.all(8.0),
+          //             decoration: BoxDecoration(
+          //               color: Colors.white,
+          //               borderRadius: BorderRadius.circular(20.0),
+          //             ),
+          //             child: chart,
+          //           );
+          //         }).toList(),
+          //       );
+          //     },
+          //   ),
+          // ),
+          // Container(
+          //   height: availableHeight * 0.64,
+          //   padding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+          //   width: double.infinity,
+          //   decoration: const BoxDecoration(
+          //     color: Colors.white,
+          //     borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          //   ),
+          //   child: Column(
+          //     children: [
+          //       Row(
+          //         children: [
+          //           Expanded(
+          //             child: Text(
+          //               'Transações',
+          //               style: Theme.of(context).textTheme.titleLarge,
+          //             ),
+          //           ),
+          //           if (_activedFilters.isNotEmpty)
+          //             Text(
+          //               'Soma: R\$${formatValue(_sumFiltredTransactions)}',
+          //               style: TextStyle(
+          //                 fontSize: 16,
+          //                 fontWeight: FontWeight.bold,
+          //                 color: Theme.of(context).colorScheme.primary,
+          //               ),
+          //             ),
+          //           FilterPopMenu(
+          //             data: FiltersMapper(_filters)
+          //                 .mapFiltersActive(_activedFilters),
+          //             onFilterChanged: _filterTransactions,
+          //           ),
+          //         ],
+          //       ),
+          //       Expanded(
+          //         child: TransactionList(
+          //           currentDate: _selectedMonth!,
+          //           transactions: _filtredTransactions,
+          //           onRemoveTransaction: _removeTransaction,
+          //           onUpdateTransaction: _updateTransaction,
+          //         ),
+          //       ),
+          //       Text(
+          //         '${_transactionByMonth.length} transações no mês',
+          //         style: const TextStyle(fontWeight: FontWeight.bold),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

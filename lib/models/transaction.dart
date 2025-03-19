@@ -1,12 +1,11 @@
 import 'package:intl/intl.dart';
+import 'package:my_expenses/models/installment.dart';
 import 'package:my_expenses/models/tag.dart';
 import 'package:my_expenses/utils/utils.dart';
 
 enum Owner { me, divided, other }
 
 enum Payment { pix, pixCredit, credit }
-
-enum TransactionStatus { paid, unpaid, partial }
 
 class Transaction {
   final int? id;
@@ -15,12 +14,11 @@ class Transaction {
   final double value;
   final String paymentDest;
   final Payment paymentType;
-  final int installments;
-  final DateTime date;
+  final int numOfInstallments;
+  final List<Installment> installments;
+  final DateTime createAt;
   final Owner owner;
   final String ownerDesc;
-  final TransactionStatus status;
-  final double partialValue;
   final String obs;
   final bool fixed;
 
@@ -31,12 +29,11 @@ class Transaction {
     required this.value,
     required this.paymentDest,
     required this.paymentType,
-    required this.installments,
-    required this.date,
+    required this.numOfInstallments,
+    this.installments = const [],
+    required this.createAt,
     required this.owner,
     required this.ownerDesc,
-    required this.status,
-    required this.partialValue,
     required this.obs,
     required this.fixed,
   });
@@ -56,12 +53,8 @@ class Transaction {
       _ => throw const FormatException('Invalid')
     };
 
-    final status = switch (data['status']) {
-      0 => TransactionStatus.unpaid,
-      1 => TransactionStatus.paid,
-      2 => TransactionStatus.partial,
-      _ => throw const FormatException('Invalid')
-    };
+    List<Map<String, Object?>> installments =
+        data['installments'] as List<Map<String, Object?>>;
 
     return Transaction(
       id: data['id'] as int,
@@ -70,12 +63,11 @@ class Transaction {
       value: data['value'] as double,
       paymentDest: data['paymentDest'] as String,
       paymentType: paymentType,
-      installments: data['installments'] as int,
-      date: DateFormat('dd/MM/yyyy').parse(data['date'] as String),
+      numOfInstallments: data['numOfInstallments'] as int,
+      installments: installments.map((e) => Installment.fromMap(e)).toList(),
+      createAt: DateFormat('dd/MM/yyyy').parse(data['createAt'] as String),
       owner: owner,
       ownerDesc: data['ownerDesc'] as String,
-      status: status,
-      partialValue: data['partialValue'] as double,
       obs: data['obs'] as String,
       fixed: data['fixed'] == 1,
     );
@@ -97,16 +89,8 @@ class Transaction {
     };
   }
 
-  String get statusText {
-    return switch (status) {
-      TransactionStatus.paid => 'Pago',
-      TransactionStatus.unpaid => 'A pagar',
-      TransactionStatus.partial => 'Parcial',
-    };
-  }
-
   double get installmentValue {
-    return value / installments;
+    return value / numOfInstallments;
   }
 
   bool get isDivided {
@@ -121,12 +105,11 @@ class Transaction {
       'value': value,
       'paymentDest': paymentDest,
       'payment': paymentType.index,
-      'installments': installments,
-      'date': DateFormat('dd/MM/yyyy').format(date),
+      'numOfInstallments': numOfInstallments,
+      'installments': installments.map((e) => e.toMap()).toList(),
+      'createAt': DateFormat('dd/MM/yyyy').format(createAt),
       'owner': owner.index,
       'ownerDesc': ownerDesc,
-      'status': status.index,
-      'partialValue': partialValue,
       'obs': obs,
       'fixed': fixed ? 1 : 0,
     };
@@ -139,11 +122,11 @@ class Transaction {
     double? value,
     String? paymentDest,
     Payment? paymentType,
-    int? installments,
-    DateTime? date,
+    int? numOfInstallments,
+    List<Installment>? installments,
+    DateTime? createAt,
     Owner? owner,
     String? ownerDesc,
-    TransactionStatus? status,
     double? partialValue,
     String? obs,
     bool? fixed,
@@ -155,27 +138,26 @@ class Transaction {
       value: value ?? this.value,
       paymentDest: paymentDest ?? this.paymentDest,
       paymentType: paymentType ?? this.paymentType,
+      numOfInstallments: numOfInstallments ?? this.numOfInstallments,
       installments: installments ?? this.installments,
-      date: date ?? this.date,
+      createAt: createAt ?? this.createAt,
       owner: owner ?? this.owner,
       ownerDesc: ownerDesc ?? this.ownerDesc,
-      status: status ?? this.status,
-      partialValue: partialValue ?? this.partialValue,
       obs: obs ?? this.obs,
       fixed: fixed ?? this.fixed,
     );
   }
 
   List<String> toCsvRow() {
-    final formatedDate = DateFormat('dd/MM/yyyy').format(date);
+    final formatedDate = DateFormat('dd/MM/yyyy').format(createAt);
     final formatedValue = owner == Owner.divided
-        ? formatValue((value / installments) / 2)
-        : formatValue(value / installments);
+        ? formatValue((value / numOfInstallments) / 2)
+        : formatValue(value / numOfInstallments);
     return [
       tag.tagName,
       title,
       ownerDesc,
-      installments.toString(),
+      numOfInstallments.toString(),
       formatedDate,
       formatedValue,
     ];

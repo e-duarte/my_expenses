@@ -127,7 +127,7 @@ class TagsChart extends StatelessWidget {
         if (tr.tag.tagName == tag.tagName) {
           totalSum += (tr.owner == Owner.divided)
               ? tr.value / 2
-              : tr.value / tr.installments;
+              : tr.value / tr.numOfInstallments;
         }
       }
 

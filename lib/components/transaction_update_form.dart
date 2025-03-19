@@ -34,7 +34,7 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
   final FocusNode _focusNode5 = FocusNode();
 
   Payment? _paymentType;
-  TransactionStatus? _status;
+  // TransactionStatus? _status;
   bool? _fixed = false;
   int? _selectedInstallments = 1;
   DateTime? _selectedDate = DateTime.now();
@@ -68,18 +68,18 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
       text: widget.transaction.paymentDest,
     );
     _partialValueController = TextEditingController(
-      text: widget.transaction.partialValue.toString(),
-    );
+        // text: widget.transaction.partialValue.toString(),
+        );
     _obsController = TextEditingController(
       text: widget.transaction.obs,
     );
 
     _selectedTag = widget.transaction.tag;
     _paymentType = widget.transaction.paymentType;
-    _status = widget.transaction.status;
+    // _status = widget.transaction.status;
     _fixed = widget.transaction.fixed;
-    _selectedInstallments = widget.transaction.installments;
-    _selectedDate = widget.transaction.date;
+    _selectedInstallments = widget.transaction.numOfInstallments;
+    _selectedDate = widget.transaction.createAt;
     _owner = widget.transaction.owner;
     _ownerDesc = widget.transaction.ownerDesc;
   }
@@ -112,12 +112,12 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
         value: value,
         paymentDest: paymentDest,
         paymentType: _paymentType!,
-        installments: _selectedInstallments!,
-        date: _selectedDate!,
+        numOfInstallments: _selectedInstallments!,
+        createAt: _selectedDate!,
         owner: _owner!,
         ownerDesc: _ownerDesc!,
-        status: _status!,
-        partialValue: partialValue,
+        // status: _status!,
+        // partialValue: partialValue,
         obs: obs,
         fixed: _fixed!,
       ),
@@ -178,7 +178,7 @@ class _TransactionUpdateFormState extends State<TransactionUpdateForm> {
         if (_paymentType == Payment.credit)
           InstallmetsDropdown(
             transactionValue: double.tryParse(_valueController!.text) ?? 0.0,
-            numberOfInstallments: _numberOfInstallments,
+            numOfInstallments: _numberOfInstallments,
             initialValue: _selectedInstallments!,
             onChanged: (value) {
               setState(() {
