@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
-import 'package:my_expenses/components/consume_chart.dart';
+import 'package:my_expenses/components/general_info_chart.dart';
 import 'package:my_expenses/components/loading_widget.dart';
-import 'package:my_expenses/components/months_dropdown.dart';
 import 'package:my_expenses/components/months_list.dart';
 import 'package:my_expenses/components/setting_form.dart';
 import 'package:my_expenses/components/tags_chart.dart';
 import 'package:my_expenses/components/filter_pop_menu.dart';
 import 'package:my_expenses/components/transaction_list.dart';
+import 'package:my_expenses/components/transaction_list_item.dart';
 import 'package:my_expenses/models/installment.dart';
 import 'package:my_expenses/models/settings.dart';
 import 'package:my_expenses/models/tag.dart';
@@ -39,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Tag> _tags = [];
 
   List<Transaction>? _transactions;
+
+  final CarouselSliderController _controller = CarouselSliderController();
+  int _current = 0;
 
   final List<Filter> _filters = [
     OwnerFilter('Dividido', Owner.divided),
@@ -89,7 +92,21 @@ class _HomeScreenState extends State<HomeScreen> {
     return filtered.isEmpty ? _transactionByMonth : filtered;
   }
 
-  List<double> get _sumAmountByMonth {
+  List<Transaction> get _transactionsByInstallments {
+    return _filtredTransactions.where((tr) {
+      var isContains = false;
+      for (var ins in tr.installments) {
+        if (ins.dueDate.month == _selectedMonth!.month &&
+            ins.dueDate.year == _selectedMonth!.year) {
+          isContains = true;
+          break;
+        }
+      }
+      return isContains;
+    }).toList();
+  }
+
+  List<double> get _sumInstallmentsByMonth {
     return List.generate(12, (i) {
       final month = DateTime(DateTime.now().year, i + 1);
       List<Installment> installments = [];
@@ -101,17 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       return installments.fold(0.0, (sum, ins) => sum + ins.amount);
-    });
-  }
-
-  double get _sumFiltredTransactions {
-    return _filtredTransactions
-        .where((tr) => tr.owner == Owner.me || tr.owner == Owner.divided)
-        .fold(0.0, (sum, tr) {
-      return sum +
-          (tr.owner == Owner.divided
-              ? tr.value / 2
-              : tr.value / tr.numOfInstallments);
     });
   }
 
@@ -135,8 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
     TransactionService().getTransactions().then((trs) {
       setState(() {
         _transactions = trs;
-
-        print(_transactions);
       });
     });
   }
@@ -154,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHome(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
+    print('${_sumInstallmentsByMonth}');
 
     final appBarHeight = mediaQuery.size.height * 0.05;
     final appBar = PreferredSize(
@@ -196,14 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: appBar,
       resizeToAvoidBottomInset: false,
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: mediaQuery.size.width,
             height: availableHeight * 0.07,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: MonthsList(
-              amountedByMonths: _sumAmountByMonth,
+              amountedByMonths: _sumInstallmentsByMonth,
               selectedMonth: _selectedMonth!,
               onMonthSelected: (month) {
                 setState(() {
@@ -213,104 +217,139 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Divider(),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  //color: Colors.blue
-                  height: availableHeight * 0.25,
-                ),
-              ],
+          SizedBox(
+            height: availableHeight * 0.91,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: availableHeight * 0.30,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final charts = [
+                          GeneralInfoChart(
+                            transactions: _transactionsByInstallments,
+                            sumInstallments: _sumInstallmentsByMonth[
+                                _selectedMonth!.month - 1],
+                            monthValue: _settings!.monthValue,
+                            availableHeight: availableHeight,
+                            availableWidth: constraints.maxWidth,
+                            tags: _tags,
+                          ),
+                          Center(
+                            child: TagsChart(
+                              transactions: _transactionByMonth,
+                              tags: _tags,
+                            ),
+                          ),
+                        ];
+
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: CarouselSlider(
+                                options: CarouselOptions(
+                                  height: constraints.maxHeight * 0.94,
+                                  enableInfiniteScroll: false,
+                                  viewportFraction: 1,
+                                  // enlargeCenterPage: true,
+                                  onPageChanged: (index, reason) {
+                                    setState(() {
+                                      _current = index;
+                                    });
+                                  },
+                                ),
+                                items: charts.map((chart) {
+                                  return Container(
+                                    width: constraints.maxWidth,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: chart,
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: charts.asMap().entries.map((entry) {
+                                return GestureDetector(
+                                  onTap: () =>
+                                      _controller.animateToPage(entry.key),
+                                  child: Container(
+                                    width: 12.0,
+                                    height: 12.0,
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 8.0, horizontal: 4.0),
+                                    decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: (Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black)
+                                            .withOpacity(_current == entry.key
+                                                ? 0.9
+                                                : 0.4)),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Transações',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      if (_activedFilters.isNotEmpty)
+                        Text(
+                          'Soma: R\$${formatValue(_sumInstallmentsByMonth[_selectedMonth!.month - 1])}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      Text(
+                        'Filtrar',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                      ),
+                      // FilterPopMenu(
+                      //   data: FiltersMapper(_filters)
+                      //       .mapFiltersActive(_activedFilters),
+                      //   onFilterChanged: _filterTransactions,
+                      // ),
+                    ],
+                  ),
+                  ..._transactionByMonth.map((tr) {
+                    return TransactionListItem(
+                      transaction: tr,
+                      currentDate: _selectedMonth!,
+                      onRemove: (transaction) {
+                        // onRemoveTransaction(transaction);
+                        Navigator.pop(context);
+                      },
+                      onUpdate: (transaction) {
+                        // onUpdateTransaction(transaction);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ],
+              ),
             ),
-          )
-          // SizedBox(
-          //   height: availableHeight * 0.36,
-          //   width: mediaQuery.size.width,
-          //   child: LayoutBuilder(
-          //     builder: (context, constraints) {
-          //       final charts = [
-          //         ConsumeChart(
-          //           value: _settings!.monthValue,
-          //           transactions: _transactionByMonth,
-          //         ),
-          //         Center(
-          //           child: TagsChart(
-          //             transactions: _transactionByMonth,
-          //             tags: _tags,
-          //           ),
-          //         ),
-          //       ];
-          //       return CarouselSlider(
-          //         options: CarouselOptions(
-          //           height: constraints.maxHeight * 0.94,
-          //           enableInfiniteScroll: false,
-          //           viewportFraction: 0.95,
-          //           enlargeCenterPage: true,
-          //         ),
-          //         items: charts.map((chart) {
-          //           return Container(
-          //             width: constraints.maxWidth,
-          //             padding: const EdgeInsets.all(8.0),
-          //             decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(20.0),
-          //             ),
-          //             child: chart,
-          //           );
-          //         }).toList(),
-          //       );
-          //     },
-          //   ),
-          // ),
-          // Container(
-          //   height: availableHeight * 0.64,
-          //   padding: const EdgeInsets.only(left: 10, top: 10, right: 10),
-          //   width: double.infinity,
-          //   decoration: const BoxDecoration(
-          //     color: Colors.white,
-          //     borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-          //   ),
-          //   child: Column(
-          //     children: [
-          //       Row(
-          //         children: [
-          //           Expanded(
-          //             child: Text(
-          //               'Transações',
-          //               style: Theme.of(context).textTheme.titleLarge,
-          //             ),
-          //           ),
-          //           if (_activedFilters.isNotEmpty)
-          //             Text(
-          //               'Soma: R\$${formatValue(_sumFiltredTransactions)}',
-          //               style: TextStyle(
-          //                 fontSize: 16,
-          //                 fontWeight: FontWeight.bold,
-          //                 color: Theme.of(context).colorScheme.primary,
-          //               ),
-          //             ),
-          //           FilterPopMenu(
-          //             data: FiltersMapper(_filters)
-          //                 .mapFiltersActive(_activedFilters),
-          //             onFilterChanged: _filterTransactions,
-          //           ),
-          //         ],
-          //       ),
-          //       Expanded(
-          //         child: TransactionList(
-          //           currentDate: _selectedMonth!,
-          //           transactions: _filtredTransactions,
-          //           onRemoveTransaction: _removeTransaction,
-          //           onUpdateTransaction: _updateTransaction,
-          //         ),
-          //       ),
-          //       Text(
-          //         '${_transactionByMonth.length} transações no mês',
-          //         style: const TextStyle(fontWeight: FontWeight.bold),
-          //       ),
-          //     ],
-          //   ),
-          // ),
+          ),
         ],
       ),
     );

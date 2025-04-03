@@ -51,7 +51,10 @@ class TransactionListItem extends StatelessWidget {
         horizontalTitleGap: 7,
         minVerticalPadding: 0,
         onTap: () => _openTransactionDialog(context),
-        leading: TagLeading(transaction.tag),
+        leading: TagLeading(
+          transaction.tag,
+          color: Color(0xffD9D9D9),
+        ),
         title: Text(
           transaction.title,
           style: Theme.of(context).textTheme.labelLarge,

@@ -29,9 +29,9 @@ class App extends StatelessWidget {
       theme: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
           primary: const Color(0xFF1AD409),
-          secondary: Colors.redAccent,
+          secondary: Color(0xFFEEA837),
           tertiary: const Color(0xFF4E71FF),
-          surface: Color(0xFFD9D9D9),
+          surface: Color(0xFF9897A1),
         ),
         textTheme: theme.textTheme.copyWith(
           titleLarge: const TextStyle(
